@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es_MX">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método de Cuadrados Medios con Pruebas Estadísticas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados */
+        body {
+            background-color: #a4bfff;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #0d6efd;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .conclusion {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+
+        .toggle-btn {
+            margin-bottom: 10px;
+        }
+
+        .tab-content {
+            background-color: white;
+            padding: 15px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            background-color: white;
+            border-bottom-color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center">Método de Cuadrados Medios</h1>
+        <h3 class="text-center">Integrantes:</h3>
+        <h5 class="text-center">Montoya Garza Luis Angel, Hernandez Ruiz Haydee Michelle, Silva Sanchez Yamilka Arely,
+            Rueda Martinez Alison Michelle, Rios Perez Angel Fernando</h5>
+        <!-- Formulario -->
+        <div class="form-container">
+            <form id="cuadradosMediosForm">
+                <div class="mb-3">
+                    <label for="semilla" class="form-label">Semilla (X1):</label>
+                    <input type="number" class="form-control" id="semilla" name="semilla" required>
+                </div>
+                <div class="mb-3">
+                    <label for="iteraciones" class="form-label">Número de iteraciones:</label>
+                    <input type="number" class="form-control" id="iteraciones" name="iteraciones" required min="10"
+                        value="100">
+                </div>
+                <button type="button" class="btn btn-primary w-100"
+                    onclick="calcularCuadradosMedios()">Calcular</button>
+            </form>
+        </div>
+
+        <!-- Pestañas para los resultados -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="resultados-tab" data-bs-toggle="tab"
+                    data-bs-target="#resultados-tab-pane" type="button" role="tab">Resultados</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chi-tab" data-bs-toggle="tab" data-bs-target="#chi-tab-pane" type="button"
+                    role="tab">Chi-Cuadrada</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="poker-tab" data-bs-toggle="tab" data-bs-target="#poker-tab-pane"
+                    type="button" role="tab">Prueba de Poker</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ks-tab" data-bs-toggle="tab" data-bs-target="#ks-tab-pane" type="button"
+                    role="tab">Kolmogorov-Smirnov</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Tabla de resultados -->
+            <div class="tab-pane fade show active" id="resultados-tab-pane" role="tabpanel"
+                aria-labelledby="resultados-tab">
+                <h2 class="text-center">Resultados del Método</h2>
+                <button class="btn btn-secondary toggle-btn" onclick="toggleTable('resultadosTable')">Mostrar/Ocultar
+                    Tabla</button>
+                <div class="table-responsive" id="resultadosTable">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Iteración</th>
+                                <th>X<sub>i</sub></th>
+                                <th>X<sub>i</sub><sup>2</sup></th>
+                                <th>Número Pseudoaleatorio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultados"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Kolmogorov-Smirnov -->
+            <div class="tab-pane fade" id="ks-tab-pane" role="tabpanel" aria-labelledby="ks-tab">
+                <h2 class="text-center">Prueba de Kolmogorov-Smirnov</h2>
+                <button class="btn btn-secondary toggle-btn" onclick="toggleTable('ksTable')">Mostrar/Ocultar
+                    Tabla</button>
+                <div class="table-responsive" id="ksTable">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>i/N</th>
+                                <th>Ri</th>
+                                <th>(i-1)/N</th>
+                                <th>|i/N - Ri|</th>
+                                <th>|Ri - (i-1)/N|</th>
+                                <th>D+</th>
+                                <th>D-</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ksResultados"></tbody>
+                    </table>
+                </div>
+                <div id="conclusionKS" class="conclusion"></div>
+            </div>
+
+            <!-- Tabla de chi-cuadrada -->
+            <div class="tab-pane fade" id="chi-tab-pane" role="tabpanel" aria-labelledby="chi-tab">
+                <h2 class="text-center">Prueba de Chi-Cuadrada</h2>
+                <button class="btn btn-secondary toggle-btn" onclick="toggleTable('chiCuadradaTable')">Mostrar/Ocultar
+                    Tabla</button>
+                <div class="table-responsive" id="chiCuadradaTable">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Intervalo</th>
+                                <th>Oi</th>
+                                <th>Ei</th>
+                                <th>(Oi - Ei)<sup>2</sup> / Ei</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chiCuadradaResultados"></tbody>
+                    </table>
+                </div>
+                <div id="conclusionChiCuadrada" class="conclusion"></div>
+            </div>
+
+            <!-- Tabla de la prueba de poker -->
+            <div class="tab-pane fade" id="poker-tab-pane" role="tabpanel" aria-labelledby="poker-tab">
+                <h2 class="text-center">Prueba de Poker</h2>
+                <button class="btn btn-secondary toggle-btn" onclick="toggleTable('pokerTable')">Mostrar/Ocultar
+                    Tabla</button>
+                <div class="table-responsive" id="pokerTable">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mano</th>
+                                <th>Oi</th>
+                                <th>Ei</th>
+                                <th>(Oi - Ei)<sup>2</sup> / Ei</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pokerResultados"></tbody>
+                    </table>
+                </div>
+                <div id="conclusionPoker" class="conclusion"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS y dependencias -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        function toggleTable(tableId) {
+            const table = document.getElementById(tableId);
+            table.style.display = table.style.display === "none" ? "block" : "none";
+        }
+
+        function calcularCuadradosMedios() {
+            const semilla = document.getElementById('semilla').value;
+            const digitos = semilla.length;
+            const iteraciones = parseInt(document.getElementById('iteraciones').value);
+
+            const resultadosTbody = document.getElementById('resultados');
+            resultadosTbody.innerHTML = '';
+
+            let Xi = parseInt(semilla);
+            const numerosPseudoaleatorios = [];
+
+            for (let i = 1; i <= iteraciones; i++) {
+                const XiCuadrado = Xi * Xi;
+                let XiCuadradoStr = XiCuadrado.toString().padStart(2 * digitos, '0');
+                const inicio = Math.floor((XiCuadradoStr.length - digitos) / 2);
+                const nuevoXiStr = XiCuadradoStr.substring(inicio, inicio + digitos);
+                const nuevoXi = parseInt(nuevoXiStr);
+                const numeroPseudoaleatorio = parseFloat('0.' + nuevoXiStr);
+                numerosPseudoaleatorios.push(numeroPseudoaleatorio);
+
+                const row = `<tr><td>${i}</td><td>${Xi}</td><td>${XiCuadradoStr}</td><td>${numeroPseudoaleatorio}</td></tr>`;
+                resultadosTbody.innerHTML += row;
+                Xi = nuevoXi;
+            }
+
+            // Calcular todas las pruebas estadísticas
+            calcularKolmogorovSmirnov(numerosPseudoaleatorios, iteraciones);
+            calcularChiCuadrada(numerosPseudoaleatorios, iteraciones);
+            calcularPoker(numerosPseudoaleatorios);
+        }
+
+        function calcularKolmogorovSmirnov(numeros, n) {
+            numeros.sort((a, b) => a - b);
+            const resultadosTbody = document.getElementById('ksResultados');
+            resultadosTbody.innerHTML = '';
+
+            let Dmas = 0;
+            let Dmenos = 0;
+
+            for (let i = 0; i < n; i++) {
+                const iN = (i + 1) / n;
+                const menosIN = i / n;
+                const Fx = numeros[i];
+
+                const DmasActual = Math.abs(iN - Fx);
+                const DmenosActual = Math.abs(Fx - menosIN);
+                Dmas = Math.max(Dmas, DmasActual);
+                Dmenos = Math.max(Dmenos, DmenosActual);
+
+                const row = `<tr>
+                    <td>${iN.toFixed(4)}</td>
+                    <td>${Fx.toFixed(4)}</td>
+                    <td>${menosIN.toFixed(4)}</td>
+                    <td>${DmasActual.toFixed(4)}</td>
+                    <td>${DmenosActual.toFixed(4)}</td>
+                    <td>${Dmas.toFixed(4)}</td>
+                    <td>${Dmenos.toFixed(4)}</td>
+                </tr>`;
+                resultadosTbody.innerHTML += row;
+            }
+
+            const conclusion = document.getElementById('conclusionKS');
+            const D = Math.max(Dmas, Dmenos);
+            const valorCritico = 1.36 / Math.sqrt(n);
+
+            conclusion.innerHTML = `
+                <p><strong>D+:</strong> ${Dmas.toFixed(4)} | <strong>D-:</strong> ${Dmenos.toFixed(4)} | <strong>D:</strong> ${D.toFixed(4)}</p>
+                <p>${D < valorCritico ?
+                    '<span class="text-success">Conclusión: Los números se distribuyen uniformemente (D < Valor crítico)</span>' :
+                    '<span class="text-danger">Conclusión: Los números NO se distribuyen uniformemente (D ≥ Valor crítico)</span>'}
+                </p>
+            `;
+        }
+
+        function calcularChiCuadrada(numerosPseudoaleatorios, iteraciones) {
+            // Definir el número de intervalos (k)
+            const k = 10; // Puedes ajustar este valor según tus necesidades
+
+            // Calcular la frecuencia esperada (Ei)
+            const Ei = iteraciones / k;
+
+            // Inicializar un array para almacenar las frecuencias observadas (Oi)
+            const Oi = new Array(k).fill(0);
+
+            // Calcular las frecuencias observadas (Oi)
+            numerosPseudoaleatorios.forEach(numero => {
+                const intervalo = Math.floor(numero * k);
+                // Asegurarse de que el intervalo esté dentro del rango válido
+                const intervaloAjustado = Math.min(intervalo, k - 1);
+                Oi[intervaloAjustado]++;
+            });
+
+            // Calcular la chi-cuadrada
+            let chiCuadrada = 0;
+            const chiCuadradaResultadosTbody = document.getElementById('chiCuadradaResultados');
+            chiCuadradaResultadosTbody.innerHTML = '';
+
+            for (let i = 0; i < k; i++) {
+                const diferencia = Oi[i] - Ei;
+                const termino = (diferencia * diferencia) / Ei;
+                chiCuadrada += termino;
+
+                // Mostrar los resultados en la tabla
+                const row = `<tr>
+                    <td>${(i / k).toFixed(2)} - ${((i + 1) / k).toFixed(2)}</td>
+                    <td>${Oi[i]}</td>
+                    <td>${Ei.toFixed(2)}</td>
+                    <td>${termino.toFixed(4)}</td>
+                </tr>`;
+                chiCuadradaResultadosTbody.innerHTML += row;
+            }
+
+            // Mostrar el valor total de chi-cuadrada
+            const row = `<tr>
+                <td colspan="3" class="text-end"><strong>Chi-Cuadrada Total:</strong></td>
+                <td><strong>${chiCuadrada.toFixed(4)}</strong></td>
+            </tr>`;
+            chiCuadradaResultadosTbody.innerHTML += row;
+
+            // Evaluar la chi-cuadrada
+            evaluarChiCuadrada(chiCuadrada, k);
+        }
+
+        function evaluarChiCuadrada(chiCuadrada, k) {
+            // Valor crítico de chi-cuadrada para un nivel de significancia del 5% y k-1 grados de libertad
+            const valoresCriticos = {
+                9: 16.919, // Para k = 10 intervalos (grados de libertad = k - 1 = 9)
+                14: 23.685, // Para k = 15 intervalos
+                19: 30.144 // Para k = 20 intervalos
+            };
+
+            const gradosLibertad = k - 1;
+            const valorCritico = valoresCriticos[gradosLibertad] || 16.919; // Valor por defecto para k = 10
+
+            // Conclusión de la prueba
+            const conclusion = document.getElementById('conclusionChiCuadrada');
+            conclusion.innerHTML = `
+                <p><strong>Chi-Cuadrada calculada:</strong> ${chiCuadrada.toFixed(4)}</p>
+                <p>${chiCuadrada <= valorCritico ?
+                    '<span class="text-success">Conclusión: No se rechaza la hipótesis de que los números siguen una distribución uniforme (χ² ≤ Valor crítico)</span>' :
+                    '<span class="text-danger">Conclusión: Se rechaza la hipótesis de que los números siguen una distribución uniforme (χ² > Valor crítico)</span>'}
+                </p>
+            `;
+        }
+
+        function calcularPoker(numerosPseudoaleatorios) {
+            // Definir las manos de poker y sus probabilidades esperadas
+            const Categorías = [
+                { nombre: "Todos diferentes (TD)", probabilidad: 0.3024 },
+                { nombre: "Exactamente 1 par (1P)", probabilidad: 0.5040 },
+                { nombre: "2 pares (2P)", probabilidad: 0.1080 },
+                { nombre: "1 tercia y 1 par (TP)", probabilidad: 0.0090 },
+                { nombre: "Tercia (T)", probabilidad: 0.0720 },
+                { nombre: "Póker (P)", probabilidad: 0.0045 },
+                { nombre: "Quintilla (Q)", probabilidad: 0.0001 }
+            ];
+
+            // Inicializar frecuencias observadas (Oi)
+            const Oi = new Array(Categorías.length).fill(0);
+
+            // Calcular las frecuencias observadas (Oi)
+            numerosPseudoaleatorios.forEach(numero => {
+                const digitos = numero.toString().substring(2, 7).padEnd(5, '0'); // Tomar 5 dígitos
+                const conteo = contarDigitos(digitos);
+
+                if (conteo[5]) Oi[6]++; // Quintilla (Q)
+                else if (conteo[4]) Oi[5]++; // Póker (P)
+                else if (conteo[3] && conteo[2]) Oi[3]++; // 1 tercia y 1 par (TP)
+                else if (conteo[3]) Oi[4]++; // Tercia (T)
+                else if (Object.values(conteo).filter(x => x === 2).length === 2) Oi[2]++; // 2 pares (2P)
+                else if (Object.values(conteo).filter(x => x === 2).length === 1) Oi[1]++; // Exactamente 1 par (1P)
+                else Oi[0]++; // Todos diferentes (TD)
+            });
+
+            // Calcular la chi-cuadrada para la prueba de poker
+            let chiCuadrada = 0;
+            const pokerResultadosTbody = document.getElementById('pokerResultados');
+            pokerResultadosTbody.innerHTML = '';
+
+            Categorías.forEach((mano, index) => {
+                const Ei = numerosPseudoaleatorios.length * mano.probabilidad;
+                const diferencia = Oi[index] - Ei;
+                const termino = (diferencia * diferencia) / Ei;
+                chiCuadrada += termino;
+
+                // Mostrar los resultados en la tabla
+                const row = `<tr>
+                    <td>${mano.nombre}</td>
+                    <td>${Oi[index]}</td>
+                    <td>${Ei.toFixed(4)}</td>
+                    <td>${termino.toFixed(4)}</td>
+                </tr>`;
+                pokerResultadosTbody.innerHTML += row;
+            });
+
+            // Mostrar el valor total de chi-cuadrada
+            const row = `<tr>
+                <td colspan="3" class="text-end"><strong>Chi-Cuadrada Total:</strong></td>
+                <td><strong>${chiCuadrada.toFixed(4)}</strong></td>
+            </tr>`;
+            pokerResultadosTbody.innerHTML += row;
+
+            // Evaluar la chi-cuadrada para la prueba de poker
+            evaluarPoker(chiCuadrada, Categorías.length);
+        }
+
+        function contarDigitos(digitos) {
+            const conteo = {};
+            for (const digito of digitos) {
+                conteo[digito] = (conteo[digito] || 0) + 1;
+            }
+            return conteo;
+        }
+
+        function evaluarPoker(chiCuadrada, k) {
+            // Valor crítico de chi-cuadrada para un nivel de significancia del 5% y k-1 grados de libertad
+            const valorCritico = 12.59; // Para 6 grados de libertad (7 manos - 1)
+
+            // Conclusión de la prueba
+            const conclusion = document.getElementById('conclusionPoker');
+            conclusion.innerHTML = `
+                <p><strong>Chi-Cuadrada calculada:</strong> ${chiCuadrada.toFixed(4)}</p>
+                <p>${chiCuadrada <= valorCritico ?
+                    '<span class="text-success">Conclusión: No se rechaza la hipótesis de que los números siguen una distribución uniforme (χ² ≤ Valor crítico)</span>' :
+                    '<span class="text-danger">Conclusión: Se rechaza la hipótesis de que los números siguen una distribución uniforme (χ² > Valor crítico)</span>'}
+                </p>
+            `;
+        }
+    </script>
+</body>
+
+</html>
